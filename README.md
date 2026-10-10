@@ -36,8 +36,8 @@ the Docker build or with `npm run build && npm start`.
 ```
 Browser ──(TanStack Query, CORS)──────────────► API :5000 ──► Postgres
    ▲                                              ▲   │
-   │ HTML                                          │   │ POST /api/revalidate
-   │                                               │   ▼  (on-demand ISR)
+   │ HTML                                         │   │ POST /api/revalidate
+   │                                              │   ▼  (on-demand ISR)
 Next.js server ──(SSR/ISR fetch: http://api:8080)─┘  Next.js
 ```
 
