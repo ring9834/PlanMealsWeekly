@@ -1,0 +1,60 @@
+# Local stack: PostgreSQL + .NET API + Next.js
+#   docker compose up --build
+#   web:     http://localhost:3000
+#   api:     http://localhost:5000/swagger
+#   db:      localhost:5432 (connect with any Postgres client)
+#
+# Values come from .env if present, otherwise the defaults after ":-".
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-mealplanner}
+      POSTGRES_USER: ${POSTGRES_USER:-mealplanner}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mealplanner}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  api:
+    build: ./api
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      # "db" is the service name; containers reach each other by service name.
+      ConnectionStrings__Default: Host=db;Port=5432;Database=${POSTGRES_DB:-mealplanner};Username=${POSTGRES_USER:-mealplanner};Password=${POSTGRES_PASSWORD:-mealplanner}
+      # The browser's origin, for CORS. __ means “go one level deeper” in linux environment variable names, so this sets Cors:Origins[0] in the .NET config.
+      Cors__Origins__0: http://localhost:3000
+      # Server-to-server call for on-demand ISR.
+      Revalidation__WebUrl: http://web:3000
+      Revalidation__Secret: ${REVALIDATE_SECRET:-dev-secret-change-me}
+    ports:
+      - "5000:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ./web
+      args:
+        # Baked into the browser bundle at build time. The BROWSER calls this,
+        # so it must be the address on your machine, not the service name.
+        NEXT_PUBLIC_API_URL: http://localhost:5000
+    environment:
+      # The Next.js SERVER (SSR/ISR) calls this from inside the Docker network.
+      API_INTERNAL_URL: http://api:8080
+      REVALIDATE_SECRET: ${REVALIDATE_SECRET:-dev-secret-change-me}
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
