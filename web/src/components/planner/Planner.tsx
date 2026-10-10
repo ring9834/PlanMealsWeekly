@@ -22,8 +22,9 @@ export function Planner() {
     const serverPlan = useQuery(currentPlanQuery());
     const recipes = useQuery(recipesQuery({ pageSize: 100 }));
     const recipesById = useMemo(
+        // A Map built from [key, value] pairs becomes a lookup table, keyed by recipe ID.
         () => new Map<number, RecipeSummary>(recipes.data?.items.map((r) => [r.id, r])),
-        [recipes.data],
+        [recipes.data]
     );
 
     // ---- client state (Zustand) ----

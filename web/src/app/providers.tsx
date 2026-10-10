@@ -8,18 +8,18 @@ import { usePlannerStore } from "@/store/plannerStore";
 import { useShoppingStore } from "@/store/shoppingStore";
 
 export function Providers({ children }: { children: ReactNode }) {
-  const queryClient = getQueryClient();
+    const queryClient = getQueryClient();
 
-  // Load persisted Zustand state after the first client render (see skipHydration).
-  useEffect(() => {
-    void usePlannerStore.persist.rehydrate();
-    void useShoppingStore.persist.rehydrate();
-  }, []);
+    // Load persisted Zustand state after the first client render (see skipHydration).
+    useEffect(() => {
+        void usePlannerStore.persist.rehydrate();
+        void useShoppingStore.persist.rehydrate();
+    }, []);
 
-  return (
-    <QueryClientProvider client={queryClient}>
-      {children}
-      <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-left" />
-    </QueryClientProvider>
-  );
+    return (
+        <QueryClientProvider client={queryClient}>
+            {children}
+            <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-left" />
+        </QueryClientProvider>
+    );
 }
